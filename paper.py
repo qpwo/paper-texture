@@ -1,8 +1,3 @@
-"""
-overlay paper texture on top of the screen
-download "https://www.transparenttextures.com/patterns/black-paper.png"
-python paper.py &
-"""
 filename = "black-paper.png"
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget
@@ -26,9 +21,22 @@ class PaperWindow(QWidget):
         # Set window attributes
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # Added WindowStaysOnTopHint
+        self.setAttribute(Qt.WA_X11NetWmWindowTypeDesktop, True)  # Added for X11
+
+        # Combine multiple window flags to ensure staying on top
+        flags = (
+            Qt.FramelessWindowHint |
+            Qt.WindowStaysOnTopHint |
+            Qt.Tool |  # Makes the window a tool window
+            Qt.X11BypassWindowManagerHint  # Bypasses window manager
+        )
+        self.setWindowFlags(flags)
 
         self.show()
+
+        # Raise window to top after showing
+        self.raise_()
+        self.activateWindow()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -46,6 +54,12 @@ class PaperWindow(QWidget):
                 x = col * self.pixmap.width()
                 y = row * self.pixmap.height()
                 painter.drawPixmap(x, y, self.pixmap)
+
+    def showEvent(self, event):
+        # Ensure window stays on top when shown
+        self.raise_()
+        self.activateWindow()
+        super().showEvent(event)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
